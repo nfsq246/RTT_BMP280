@@ -497,27 +497,27 @@ static void print_rslt(const char api_name[], int8_t rslt)
 {
     if (rslt != BMP280_OK)
     {
-        rt_kprintf("%s\t", api_name);
+        LOG_D("%s\t", api_name);
         if (rslt == BMP280_E_NULL_PTR)
         {
-            rt_kprintf("Error [%d] : Null pointer error\r\n", rslt);
+            LOG_E("Error [%d] : Null pointer error\r\n", rslt);
         }
         else if (rslt == BMP280_E_COMM_FAIL)
         {
-            rt_kprintf("Error [%d] : Bus communication failed\r\n", rslt);
+            LOG_E("Error [%d] : Bus communication failed\r\n", rslt);
         }
         else if (rslt == BMP280_E_IMPLAUS_TEMP)
         {
-            rt_kprintf("Error [%d] : Invalid Temperature\r\n", rslt);
+            LOG_E("Error [%d] : Invalid Temperature\r\n", rslt);
         }
         else if (rslt == BMP280_E_DEV_NOT_FOUND)
         {
-            rt_kprintf("Error [%d] : Device not found\r\n", rslt);
+            LOG_E("Error [%d] : Device not found\r\n", rslt);
         }
         else
         {
             /* For more error codes refer "*_defs.h" */
-            rt_kprintf("Error [%d] : Unknown error code\r\n", rslt);
+            LOG_E("Error [%d] : Unknown error code\r\n", rslt);
         }
     }
 }
