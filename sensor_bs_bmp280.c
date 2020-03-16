@@ -11,12 +11,11 @@
 #define DBG_COLOR
 #include <rtdbg.h>
 
-#define PKG_USING_BMP280_PRES
-#define PKG_USING_BMP280_TEMP
-#define SENSOR_PRES_RANGE_MAX 0xFFFFFFFF
-#define SENSOR_PRES_RANGE_MIN 0x0
-#define SENSOR_TEMP_RANGE_MAX 0xFFFFFFFF
-#define SENSOR_TEMP_RANGE_MIN 0x0
+
+#define SENSOR_PRES_RANGE_MAX 110000
+#define SENSOR_PRES_RANGE_MIN 30000
+#define SENSOR_TEMP_RANGE_MAX 85
+#define SENSOR_TEMP_RANGE_MIN -40
 
 static struct rt_i2c_bus_device *i2c_bus_dev;
 static void delay_ms(uint32_t period_ms);
@@ -28,6 +27,7 @@ static void print_rslt(const char api_name[], int8_t rslt);
 struct bmp280_dev bmp;
 static rt_size_t _bmp280_polling_get_data(rt_sensor_t sensor, struct rt_sensor_data *data)
 {
+#ifdef PKG_USING_BMP280_PRES
     if (sensor->info.type == RT_SENSOR_CLASS_BARO)
     {
 
@@ -46,7 +46,13 @@ static rt_size_t _bmp280_polling_get_data(rt_sensor_t sensor, struct rt_sensor_d
         data->timestamp = rt_sensor_get_ts();
 
     }
-    else if (sensor->info.type == RT_SENSOR_CLASS_TEMP)
+    else
+    {
+        return 0;			
+    }
+#endif
+#ifdef PKG_USING_BMP280_TEMP
+    if (sensor->info.type == RT_SENSOR_CLASS_TEMP)
     {
 
         struct bmp280_uncomp_data ucomp_data;
@@ -67,7 +73,7 @@ static rt_size_t _bmp280_polling_get_data(rt_sensor_t sensor, struct rt_sensor_d
     {
         return 0;			
     }
-
+#endif
     return 1;
 }
 static rt_size_t _bmp280_fetch_data(struct rt_sensor_device *sensor, void *buf, rt_size_t len)
@@ -103,6 +109,7 @@ static rt_err_t _bmp280_get_info(rt_sensor_t sensor, void *args)
     sensor_pres.intf_type  = RT_SENSOR_INTF_I2C;
 
     sensor_pres.period_min = 5;
+#ifdef PKG_USING_BMP280_PRES
     if(!strcmp(sensor->info.model,"bmp280_pres"))
     {
         sensor_pres.type       = RT_SENSOR_CLASS_BARO;
@@ -111,7 +118,13 @@ static rt_err_t _bmp280_get_info(rt_sensor_t sensor, void *args)
         sensor_pres.range_max  = SENSOR_PRES_RANGE_MAX;
         sensor_pres.range_min  = SENSOR_PRES_RANGE_MIN;
     }
-    else if (!strcmp(sensor->info.model,"bmp280_temp"))
+    else
+    {
+        return -RT_ERROR;
+    }
+#endif
+#ifdef PKG_USING_BMP280_TEMP
+    if (!strcmp(sensor->info.model,"bmp280_temp"))
     {
         sensor_pres.type       = RT_SENSOR_CLASS_TEMP;
         sensor_pres.unit       = RT_SENSOR_UNIT_DCELSIUS;
@@ -123,7 +136,7 @@ static rt_err_t _bmp280_get_info(rt_sensor_t sensor, void *args)
     {
         return -RT_ERROR;
     }
-
+#endif
     rt_memcpy(&sensor_pres, args, sizeof(struct rt_sensor_config));
     return RT_EOK;
 }
@@ -350,12 +363,16 @@ static int rt_bmp280_init(struct rt_sensor_intf *intf)
 
     /* configuring the temperature oversampling, filter coefficient and output data rate */
     /* Overwrite the desired settings */
+
     conf.filter = BMP280_FILTER_COEFF_2;
     /* Temperature oversampling set at 4x */
+#ifdef PKG_USING_BMP280_TEMP
     conf.os_temp = BMP280_OS_4X;
+#endif
+#ifdef PKG_USING_BMP280_PRES
     /* Pressure oversampling set at 4x */
     conf.os_pres = BMP280_OS_4X;
-
+#endif
     /* Setting the output data rate as 1HZ(1000ms) */
     conf.odr = BMP280_ODR_1000_MS;
     rslt = bmp280_set_config(&conf, &bmp);
