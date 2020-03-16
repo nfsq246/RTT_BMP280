@@ -49,13 +49,7 @@ RT-Thread online packages  --->
     sensors drivers  --->
       BME280 sensor driver package, support: barometric, humidity.
               Version (latest)  --->
-        [*]   Enable BMP280 pressure
-        [*]   Enable BMP280 temperature
 ```
-
-**Enable MPU6xxx acce**： 配置开启大气压功能
-
-**Enable MPU6xxx gyro**： 配置开启温度功能
 
 **Version**：软件包版本选择
 

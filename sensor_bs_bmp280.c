@@ -27,53 +27,47 @@ static void print_rslt(const char api_name[], int8_t rslt);
 struct bmp280_dev bmp;
 static rt_size_t _bmp280_polling_get_data(rt_sensor_t sensor, struct rt_sensor_data *data)
 {
-#ifdef PKG_USING_BMP280_PRES
-    if (sensor->info.type == RT_SENSOR_CLASS_BARO)
-    {
 
-        struct bmp280_uncomp_data ucomp_data;
-        uint32_t pres32;
+		if (sensor->info.type == RT_SENSOR_CLASS_BARO)
+		{
 
-        /* Reading the raw data from sensor */
-        bmp280_get_uncomp_data(&ucomp_data, &bmp);
+				struct bmp280_uncomp_data ucomp_data;
+				uint32_t pres32;
 
-        /* Getting the compensated pressure using 32 bit precision */
-        bmp280_get_comp_pres_32bit(&pres32, ucomp_data.uncomp_press, &bmp);
+				/* Reading the raw data from sensor */
+				bmp280_get_uncomp_data(&ucomp_data, &bmp);
+
+				/* Getting the compensated pressure using 32 bit precision */
+				bmp280_get_comp_pres_32bit(&pres32, ucomp_data.uncomp_press, &bmp);
 
 
-        data->type = RT_SENSOR_CLASS_BARO;
-        data->data.baro = pres32;
-        data->timestamp = rt_sensor_get_ts();
+				data->type = RT_SENSOR_CLASS_BARO;
+				data->data.baro = pres32;
+				data->timestamp = rt_sensor_get_ts();
 
-    }
-    else
-    {
-        return 0;			
-    }
-#endif
-#ifdef PKG_USING_BMP280_TEMP
-    if (sensor->info.type == RT_SENSOR_CLASS_TEMP)
-    {
+		}
 
-        struct bmp280_uncomp_data ucomp_data;
-        int32_t temp32;
+		else if (sensor->info.type == RT_SENSOR_CLASS_TEMP)
+		{
 
-        /* Reading the raw data from sensor */
-        bmp280_get_uncomp_data(&ucomp_data, &bmp);
+				struct bmp280_uncomp_data ucomp_data;
+				int32_t temp32;
 
-        /* Getting the compensated pressure using 32 bit precision */
-        bmp280_get_comp_temp_32bit(&temp32, ucomp_data.uncomp_temp, &bmp);
-    
+				/* Reading the raw data from sensor */
+				bmp280_get_uncomp_data(&ucomp_data, &bmp);
 
-        data->type = RT_SENSOR_CLASS_TEMP;
-        data->data.baro = temp32/10;
-        data->timestamp = rt_sensor_get_ts();
-    }
-    else
-    {
-        return 0;			
-    }
-#endif
+				/* Getting the compensated pressure using 32 bit precision */
+				bmp280_get_comp_temp_32bit(&temp32, ucomp_data.uncomp_temp, &bmp);
+		
+
+				data->type = RT_SENSOR_CLASS_TEMP;
+				data->data.baro = temp32/10;
+				data->timestamp = rt_sensor_get_ts();
+		}
+		else
+		{
+				return 0;			
+		}
     return 1;
 }
 static rt_size_t _bmp280_fetch_data(struct rt_sensor_device *sensor, void *buf, rt_size_t len)
@@ -98,6 +92,8 @@ static rt_size_t _bmp280_fetch_data(struct rt_sensor_device *sensor, void *buf, 
 static rt_err_t _bmp280_get_id(rt_sensor_t sensor, rt_int32_t args)
 {
     args = bmp.chip_id;
+		args++;
+		args--;
     return RT_EOK;
 }
 static rt_err_t _bmp280_get_info(rt_sensor_t sensor, void *args)
@@ -109,7 +105,7 @@ static rt_err_t _bmp280_get_info(rt_sensor_t sensor, void *args)
     sensor_pres.intf_type  = RT_SENSOR_INTF_I2C;
 
     sensor_pres.period_min = 5;
-#ifdef PKG_USING_BMP280_PRES
+
     if(!strcmp(sensor->info.model,"bmp280_pres"))
     {
         sensor_pres.type       = RT_SENSOR_CLASS_BARO;
@@ -118,13 +114,8 @@ static rt_err_t _bmp280_get_info(rt_sensor_t sensor, void *args)
         sensor_pres.range_max  = SENSOR_PRES_RANGE_MAX;
         sensor_pres.range_min  = SENSOR_PRES_RANGE_MIN;
     }
-    else
-    {
-        return -RT_ERROR;
-    }
-#endif
-#ifdef PKG_USING_BMP280_TEMP
-    if (!strcmp(sensor->info.model,"bmp280_temp"))
+
+    else if (!strcmp(sensor->info.model,"bmp280_temp"))
     {
         sensor_pres.type       = RT_SENSOR_CLASS_TEMP;
         sensor_pres.unit       = RT_SENSOR_UNIT_DCELSIUS;
@@ -136,7 +127,7 @@ static rt_err_t _bmp280_get_info(rt_sensor_t sensor, void *args)
     {
         return -RT_ERROR;
     }
-#endif
+
     rt_memcpy(&sensor_pres, args, sizeof(struct rt_sensor_config));
     return RT_EOK;
 }
@@ -219,7 +210,7 @@ static rt_err_t _bmp280_control(struct rt_sensor_device *sensor, int cmd, void *
     case RT_SENSOR_CTRL_GET_INFO:
         return _bmp280_get_info(sensor,args);
     case RT_SENSOR_CTRL_SET_RANGE:
-        return -RT_ERROR;
+        return _bmp280_set_RANGE(sensor,args);
     case RT_SENSOR_CTRL_SET_ODR:
         return _bmp280_set_odr(sensor,(rt_int32_t)args);
     case RT_SENSOR_CTRL_SET_MODE:
@@ -252,58 +243,53 @@ int rt_hw_bmp280_init(const char *name, struct rt_sensor_config *cfg)
     }
     else
     {
-#ifdef PKG_USING_BMP280_PRES
-        {
-            sensor_pres = rt_calloc(1, sizeof(struct rt_sensor_device));
-            if (sensor_pres == RT_NULL)
-                return -1;
 
-            sensor_pres->info.type       = RT_SENSOR_CLASS_BARO;
-            sensor_pres->info.vendor     = RT_SENSOR_VENDOR_BOSCH;
-            sensor_pres->info.model      = "bmp280_pres";
-            sensor_pres->info.unit       = RT_SENSOR_UNIT_PA;
-            sensor_pres->info.intf_type  = RT_SENSOR_INTF_I2C;
-            sensor_pres->info.range_max  = SENSOR_PRES_RANGE_MAX;
-            sensor_pres->info.range_min  = SENSOR_PRES_RANGE_MIN;
-            sensor_pres->info.period_min = 5;
+				sensor_pres = rt_calloc(1, sizeof(struct rt_sensor_device));
+				if (sensor_pres == RT_NULL)
+						return -1;
 
-            rt_memcpy(&sensor_pres->config, cfg, sizeof(struct rt_sensor_config));
-            sensor_pres->ops = &sensor_ops;
+				sensor_pres->info.type       = RT_SENSOR_CLASS_BARO;
+				sensor_pres->info.vendor     = RT_SENSOR_VENDOR_BOSCH;
+				sensor_pres->info.model      = "bmp280_pres";
+				sensor_pres->info.unit       = RT_SENSOR_UNIT_PA;
+				sensor_pres->info.intf_type  = RT_SENSOR_INTF_I2C;
+				sensor_pres->info.range_max  = SENSOR_PRES_RANGE_MAX;
+				sensor_pres->info.range_min  = SENSOR_PRES_RANGE_MIN;
+				sensor_pres->info.period_min = 5;
 
-            result = rt_hw_sensor_register(sensor_pres, name, RT_DEVICE_FLAG_RDWR, RT_NULL);
-            if (result != RT_EOK)
-            {
-                LOG_E("device register err code: %d", result);
-                goto __exit;
-            }
-        }
-#endif
-#ifdef PKG_USING_BMP280_TEMP
-        {
-            sensor_temp = rt_calloc(1, sizeof(struct rt_sensor_device));
-            if (sensor_temp == RT_NULL)
-                goto __exit;
+				rt_memcpy(&sensor_pres->config, cfg, sizeof(struct rt_sensor_config));
+				sensor_pres->ops = &sensor_ops;
 
-            sensor_temp->info.type       = RT_SENSOR_CLASS_TEMP;
-            sensor_temp->info.vendor     = RT_SENSOR_VENDOR_BOSCH;
-            sensor_temp->info.model      = "bmp280_temp";
-            sensor_temp->info.unit       = RT_SENSOR_UNIT_DCELSIUS;
-            sensor_temp->info.intf_type  = RT_SENSOR_INTF_I2C;
-            sensor_temp->info.range_max  = SENSOR_TEMP_RANGE_MAX;
-            sensor_temp->info.range_min  = SENSOR_TEMP_RANGE_MIN;
-            sensor_temp->info.period_min = 5;
+				result = rt_hw_sensor_register(sensor_pres, name, RT_DEVICE_FLAG_RDWR, RT_NULL);
+				if (result != RT_EOK)
+				{
+						LOG_E("device register err code: %d", result);
+						goto __exit;
+				}
 
-            rt_memcpy(&sensor_temp->config, cfg, sizeof(struct rt_sensor_config));
-            sensor_temp->ops = &sensor_ops;
+				sensor_temp = rt_calloc(1, sizeof(struct rt_sensor_device));
+				if (sensor_temp == RT_NULL)
+						goto __exit;
 
-            result = rt_hw_sensor_register(sensor_temp, name, RT_DEVICE_FLAG_RDWR, RT_NULL);
-            if (result != RT_EOK)
-            {
-                LOG_E("device register err code: %d", result);
-                goto __exit;
-            }
-        }
-#endif
+				sensor_temp->info.type       = RT_SENSOR_CLASS_TEMP;
+				sensor_temp->info.vendor     = RT_SENSOR_VENDOR_BOSCH;
+				sensor_temp->info.model      = "bmp280_temp";
+				sensor_temp->info.unit       = RT_SENSOR_UNIT_DCELSIUS;
+				sensor_temp->info.intf_type  = RT_SENSOR_INTF_I2C;
+				sensor_temp->info.range_max  = SENSOR_TEMP_RANGE_MAX;
+				sensor_temp->info.range_min  = SENSOR_TEMP_RANGE_MIN;
+				sensor_temp->info.period_min = 5;
+
+				rt_memcpy(&sensor_temp->config, cfg, sizeof(struct rt_sensor_config));
+				sensor_temp->ops = &sensor_ops;
+
+				result = rt_hw_sensor_register(sensor_temp, name, RT_DEVICE_FLAG_RDWR, RT_NULL);
+				if (result != RT_EOK)
+				{
+						LOG_E("device register err code: %d", result);
+						goto __exit;
+				}
+
     }
     
 
@@ -497,7 +483,7 @@ static void print_rslt(const char api_name[], int8_t rslt)
 {
     if (rslt != BMP280_OK)
     {
-        LOG_D("%s\t", api_name);
+        rt_kprintf("%s\t", api_name);
         if (rslt == BMP280_E_NULL_PTR)
         {
             LOG_E("Error [%d] : Null pointer error\r\n", rslt);
