@@ -61,7 +61,7 @@ static rt_size_t _bmp280_polling_get_data(rt_sensor_t sensor, struct rt_sensor_d
 
 
         data->type = RT_SENSOR_CLASS_TEMP;
-        data->data.baro = temp32/10;
+        data->data.temp = temp32/10;
         data->timestamp = rt_sensor_get_ts();
     }
     else
@@ -77,14 +77,6 @@ static rt_size_t _bmp280_fetch_data(struct rt_sensor_device *sensor, void *buf, 
     if (sensor->config.mode == RT_SENSOR_MODE_POLLING)
     {
         return _bmp280_polling_get_data(sensor, buf);
-    }
-    else if (sensor->config.mode == RT_SENSOR_MODE_INT)
-    {
-        return 0;
-    }
-    else if (sensor->config.mode == RT_SENSOR_MODE_FIFO)
-    {
-        return 0;
     }
     else
         return 0;
@@ -213,7 +205,7 @@ int rt_hw_bmp280_init(const char *name, struct rt_sensor_config *cfg)
 
         sensor_pres = rt_calloc(1, sizeof(struct rt_sensor_device));
         if (sensor_pres == RT_NULL)
-                return -1;
+                return -RT_ERROR;
 
         sensor_pres->info.type       = RT_SENSOR_CLASS_BARO;
         sensor_pres->info.vendor     = RT_SENSOR_VENDOR_BOSCH;
@@ -274,7 +266,7 @@ __exit:
 static int _rt_bmp280_init(struct rt_sensor_intf *intf)
 {
     int8_t rslt;
-		rt_uint8_t  i2c_addr = (rt_uint32_t)(intf->user_data) & 0xff;
+	rt_uint8_t  i2c_addr = (rt_uint32_t)(intf->user_data) & 0xff;
     struct bmp280_config conf;
 		
 
@@ -449,7 +441,7 @@ static void print_rslt(const char api_name[], int8_t rslt)
 {
     if (rslt != BMP280_OK)
     {
-        rt_kprintf("%s\t", api_name);
+        LOG_E("%s\t", api_name);
         if (rslt == BMP280_E_NULL_PTR)
         {
             LOG_E("Error [%d] : Null pointer error\r\n", rslt);
