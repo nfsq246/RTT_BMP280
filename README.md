@@ -6,7 +6,7 @@
 
 想看中文详细性能信息淘宝BMP280就行。
 
-BMP280支持IIC和SPI通信，但测试板子只有ali-developer-kit，只提供了IIC接口，如果想要支持SP参考上面的官方驱动改下就行。
+BMP280支持IIC和SPI通信，但测试板子只有ali-developer-kit，只提供了IIC接口，如果想要支持SPI参考上面的官方驱动改下就行。
 
 ## 支持情况
 
@@ -51,6 +51,8 @@ RT-Thread online packages  --->
 
 **Version**：软件包版本选择
 
+不定时随缘更新
+
 ### 使用软件包
 
 bmp280 软件包初始化函数如下所示：
@@ -93,5 +95,7 @@ INIT_APP_EXPORT(bmp280_port);
 - [ChenHN_246](https://github.com/nfsq246) 
 
 - 主页：<https://github.com/nfsq246/RTT_BMP280>
+
+- 邮箱：<ChenHN_246@163.com>
 
 - 第一次写驱动，有bug或者问题的欢迎轰炸我
