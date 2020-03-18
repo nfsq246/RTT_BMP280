@@ -104,7 +104,7 @@ static rt_size_t _bmp280_fetch_data(struct rt_sensor_device *sensor, void *buf, 
         
 }
 
-static rt_err_t _bmp280_set_odr(rt_sensor_t sensor, rt_int32_t args)
+static rt_err_t _bmp280_set_odr(rt_sensor_t sensor, rt_uint32_t args)
 {
 
     int8_t rslt;
@@ -149,7 +149,7 @@ static rt_err_t _bmp280_set_odr(rt_sensor_t sensor, rt_int32_t args)
 
 }
 
-static rt_err_t _bmp280_set_POWER(rt_sensor_t sensor, rt_int32_t args)
+static rt_err_t _bmp280_set_POWER(rt_sensor_t sensor, rt_uint32_t args)
 {
     int8_t rslt;
     if(args==RT_SENSOR_POWER_DOWN||args==RT_SENSOR_POWER_NORMAL)
@@ -184,31 +184,35 @@ static rt_err_t _bmp280_set_POWER(rt_sensor_t sensor, rt_int32_t args)
         return -RT_ERROR;
     }
 }
+static rt_err_t _bmp280_get_id(rt_sensor_t sensor, uint16_t * args)
+{
+    *args = bmp.chip_id;
+    return RT_EOK;
+}
 static rt_err_t _bmp280_control(struct rt_sensor_device *sensor, int cmd, void *args)
 {
     rt_err_t result = RT_EOK;
     switch (cmd)
     {
     case RT_SENSOR_CTRL_GET_ID:
-        result = -RT_ERROR;
+        result = _bmp280_get_id(sensor,args);
         break;
-    case RT_SENSOR_CTRL_SET_RANGE:
-        result = -RT_ERROR;
-        break;
+    // case RT_SENSOR_CTRL_SET_RANGE:
+    //     result = -RT_ERROR;
+    //     break;
     case RT_SENSOR_CTRL_SET_ODR:
         result = _bmp280_set_odr(sensor,(rt_uint32_t)args & 0xffff);
         break;
     case RT_SENSOR_CTRL_SET_MODE:
-        result = -RT_ERROR;
         break;
     case RT_SENSOR_CTRL_SET_POWER:
         result = _bmp280_set_POWER(sensor,(rt_uint32_t)args & 0xff);
         break;
-    case RT_SENSOR_CTRL_SELF_TEST:
-        result = -RT_ERROR;
-        break;
+    // case RT_SENSOR_CTRL_SELF_TEST:
+    //     result = -RT_ERROR;
+    //     break;
     default:
-        LOG_E("only RT_SENSOR_CTRL_SET_POWER,RT_SENSOR_CTRL_SET_ODR could set");
+        LOG_E("only RT_SENSOR_CTRL_GET_ID,RT_SENSOR_CTRL_SET_POWER,RT_SENSOR_CTRL_SET_ODR could set");
         return -RT_ERROR;
     }
     return result;
