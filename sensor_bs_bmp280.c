@@ -214,7 +214,7 @@ int rt_hw_bmp280_init(const char *name, struct rt_sensor_config *cfg)
         sensor_pres->info.intf_type  = RT_SENSOR_INTF_I2C;
         sensor_pres->info.range_max  = SENSOR_PRES_RANGE_MAX;
         sensor_pres->info.range_min  = SENSOR_PRES_RANGE_MIN;
-        sensor_pres->info.period_min = 5;
+        sensor_pres->info.period_min = 0;
 
         rt_memcpy(&sensor_pres->config, cfg, sizeof(struct rt_sensor_config));
         sensor_pres->ops = &sensor_ops;
@@ -237,7 +237,7 @@ int rt_hw_bmp280_init(const char *name, struct rt_sensor_config *cfg)
         sensor_temp->info.intf_type  = RT_SENSOR_INTF_I2C;
         sensor_temp->info.range_max  = SENSOR_TEMP_RANGE_MAX;
         sensor_temp->info.range_min  = SENSOR_TEMP_RANGE_MIN;
-        sensor_temp->info.period_min = 5;
+        sensor_temp->info.period_min = 0;
 
         rt_memcpy(&sensor_temp->config, cfg, sizeof(struct rt_sensor_config));
         sensor_temp->ops = &sensor_ops;
