@@ -77,7 +77,7 @@ int bmp280_port(void)
     struct rt_sensor_config cfg;
     
     cfg.intf.dev_name = BMP280_I2CBUS_NAME;
-    cfg.intf.user_data = (void *)BMP280_ADDR_DEFAULT;
+    cfg.intf.arg = (void *)BMP280_ADDR_DEFAULT;
 
     rt_hw_bmp280_init("bmp280", &cfg);
     return 0;
